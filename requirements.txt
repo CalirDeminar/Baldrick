@@ -1,0 +1,2 @@
+haversine==2.9.0
+pillow==10.4.0

@@ -1,0 +1,5 @@
+!./example/*
+!./data/legend.jpg
+./stitch_source/*
+./stitch_output/*
+./Test/*
