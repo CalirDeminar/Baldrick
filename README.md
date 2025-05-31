@@ -33,7 +33,7 @@ Tags for a waypoint can be:
     The first of these tags will be used as the magnetic declination for the route. If not set will default to 0.0
 
 ### Command Arguments
-An example calling of the tool looks like `python main.py test 00:30:00`
+An example calling of the tool looks like `baldrick test 00:30:00`
 The arguments are:
 - Route Name
 - Optional: start time in hours:minutes:seconds
