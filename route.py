@@ -396,8 +396,8 @@ class Route:
             annotated_board.save(board_name)
             print("%s/%s  %s Board Complete" % (i+1, len(self.waypoints), board_name))
 
-        full_board = self.create_board_for_wp(i)
-        full_board.save("./%s/%s-Overview.jpg" % (self.name, self.map.name))
+        # full_board = self.create_board_for_wp(i)
+        # full_board.save("./%s/%s-Overview.jpg" % (self.name, self.map.name))
 
     def debug_doghouse(self):
         for index, wp in enumerate(self.waypoints):

@@ -2,6 +2,9 @@ import csv
 import math
 from PIL import Image
 import os
+from os import path
+
+bundle_dir = path.abspath(path.dirname(__file__))
 
 
 class MapFile:
@@ -17,7 +20,7 @@ class MapFile:
 
     def __init__(self, dcs_map_name):
         self.name = dcs_map_name
-        self.filename = "./data/%s/map.jpg" % dcs_map_name
+        self.filename = path.join(bundle_dir, "./data/%s/map.jpg" % dcs_map_name)
         self.coordinate_map = import_pixel_map(dcs_map_name)
 
     def get_angle_off_north(self, lat, long):
@@ -32,7 +35,8 @@ class MapFile:
         return angle
 
     def get_map_image(self):
-        return Image.open("./data/%s/map.jpg" % self.name)
+        filename = path.join(bundle_dir, "./data/%s/map.jpg" % self.name)
+        return Image.open(filename)
 
     def get_pixels_for(self, lat, long):
         (lat_d, lat_m, lat_s) = lat
@@ -92,7 +96,7 @@ class MapFile:
 
 def import_pixel_map(dcs_map_name):
     output = {}
-    filename = "./data/%s/map.csv" % dcs_map_name
+    filename = path.join(bundle_dir, "./data/%s/map.csv" % dcs_map_name)
     with open(filename, newline='') as csv_file:
         reader = csv.reader(csv_file, delimiter=',', quotechar='|')
         for i, row in enumerate(reader):
@@ -115,7 +119,8 @@ def find_pixel_map_lat_long_bounds(dcs_map_name):
 def find_map_from_wp(lat, long):
     (lat_d, _, _) = lat
     (long_d, _, _) = long
-    data_folders = list(filter(lambda i: i != "routes" and i != "legend.jpg", os.listdir("./data")))
+    folder_name = path.join(bundle_dir, ".\\data")
+    data_folders = list(filter(lambda i: i != "routes" and i != "legend.jpg", os.listdir(folder_name)))
     lat_long_bounds = list(map(lambda i: (i, find_pixel_map_lat_long_bounds(i)), data_folders))
     eligible_bounds = list(
         filter(
