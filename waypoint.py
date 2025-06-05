@@ -65,13 +65,32 @@ class WayPoint:
         return round((output_rad*180/math.pi + 360) % 360)
 
     def to_degrees(self):
-        return (
-            self.lat[0] + (self.lat[1]/60) + (self.lat[2]/3600),
-            self.long[0] + (self.long[1]/60) + (self.long[2]/3600)
-        )
+        return to_degrees(self.lat, self.long)
 
     def distance_from(self, wp):
         return haversine.haversine(self.to_degrees(), wp.to_degrees(), unit=Unit.NAUTICAL_MILES)
+
+
+def to_degrees(lat, long):
+    return (
+        lat[0] + (lat[1]/60) + (lat[2]/3600),
+        long[0] + (long[1]/60) + (long[2]/3600)
+    )
+
+
+def to_lat_long(lat, long):
+    lat_d = round(lat)
+    lat_m = round((lat - lat_d)*60)
+    lat_s = round((lat - lat_d - (lat_m/60))*60*60)
+
+    long_d = round(long)
+    long_m = round((long - long_d)*60)
+    long_s = round((long - long_d - (long_m/60))*60*60)
+
+    return (
+        (lat_d, lat_m, lat_s),
+        (long_d, long_m, long_s)
+    )
 
 
 class TestWaypoint(unittest.TestCase):
@@ -122,6 +141,12 @@ class TestWaypoint(unittest.TestCase):
             ),
             35
         )
+
+    def test_to_degrees(self):
+        self.assertEqual(to_degrees((20, 30, 0), (20, 30, 0)), (20.5, 20.5))
+
+    def test_to_lat_long(self):
+        self.assertEqual(to_lat_long(20.5, 20.5), ((20, 30, 0), (20, 30, 0)))
 
 
 if __name__ == "__main__":

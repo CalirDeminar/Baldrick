@@ -1,1 +1,2 @@
 TOT on a per-wp basis in the route file
+Add notes to each leg that don't intefere with the tags

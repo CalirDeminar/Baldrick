@@ -47,6 +47,7 @@ class Route:
         self.start_time = start_time
         self.time_on_target = time_on_target
         self.set_wp_bearings()
+        self.set_wp_min_alts()
         self.map_wp_pixels()
         self.set_tot_times()
         self.set_map_magvar()
@@ -93,6 +94,12 @@ class Route:
             if wp.index < len(self.waypoints)-1:
                 next_wp = self.waypoints[wp.index + 1]
                 wp.bearing_to_next = next_wp.bearing_from(wp)
+
+    def set_wp_min_alts(self):
+        for wp in self.waypoints:
+            if wp.index > 0 and wp.min_alt is None:
+                prev = self.waypoints[wp.index-1]
+                wp.min_alt = self.map.get_min_alt_between(wp, prev)
 
     def set_tot_times(self):
         targets = [x for x in self.waypoints if "TGT" in x.tags]
@@ -389,13 +396,14 @@ class Route:
 
     def save_boards(self):
         for i, wp in enumerate(self.waypoints):
-            board = self.create_board_for_wp(i)
-            cropped_board = self.crop_board_for_wp(i, board)
-            annotated_board = self.add_doghouse_for_wp(i, cropped_board)
-            annotated_board = annotated_board.resize((1600, 2400), resample=PIL.Image.BILINEAR)
-            board_name = "./%s/%s-wp%s.jpg" % (self.name, self.map.name, i+1)
-            annotated_board.save(board_name)
-            print("%s/%s  %s Board Complete" % (i+1, len(self.waypoints), board_name))
+            if i > 0:
+                board = self.create_board_for_wp(i)
+                cropped_board = self.crop_board_for_wp(i, board)
+                annotated_board = self.add_doghouse_for_wp(i, cropped_board)
+                annotated_board = annotated_board.resize((1600, 2400), resample=PIL.Image.BILINEAR)
+                board_name = "./%s/%s-wp%s.jpg" % (self.name, self.map.name, i)
+                annotated_board.save(board_name)
+                print("%s/%s  %s Board Complete" % (i, len(self.waypoints)-1, board_name))
 
         # full_board = self.create_board_for_wp(i)
         # full_board.save("./%s/%s-Overview.jpg" % (self.name, self.map.name))

@@ -3,6 +3,9 @@ import math
 from PIL import Image
 import os
 from os import path
+from decimal import *
+import numpy as np
+from waypoint import to_degrees, to_lat_long
 
 bundle_dir = path.abspath(path.dirname(__file__))
 
@@ -17,11 +20,13 @@ class MapFile:
     coordinate_map = None
     mag_var = 0
     angle_off_north = None
+    altitude_map = None
 
     def __init__(self, dcs_map_name):
         self.name = dcs_map_name
         self.filename = path.join(bundle_dir, "./data/%s/map.jpg" % dcs_map_name)
         self.coordinate_map = import_pixel_map(dcs_map_name)
+        self.altitude_map = import_altitude_map(dcs_map_name)
 
     def get_angle_off_north(self, lat, long):
         (lat_1, _, _) = lat
@@ -37,6 +42,60 @@ class MapFile:
     def get_map_image(self):
         filename = path.join(bundle_dir, "./data/%s/map.jpg" % self.name)
         return Image.open(filename)
+
+    def get_min_alt_between(self, wp1, wp2):
+        lat1 = wp1.lat
+        long1 = wp1.long
+        lat2 = wp2.lat
+        long2 = wp2.long
+        # (lat1, long1) = wp1
+        # (lat2, long2) = wp2
+        (lat1d, long1d) = to_degrees(lat1, long1)
+        (lat2d, long2d) = to_degrees(lat2, long2)
+        route = [(lat1, long1)]
+
+        dyd = lat1d - lat2d
+        dxd = long1d - long2d
+        m = dyd / dxd
+
+        rng = np.arange(long1d, long2d, 0.1, dtype=float)
+
+        for long in rng:
+            lat = lat1d + (long * m)
+            route.append(to_lat_long(lat, long))
+
+        output = 0
+
+        for (lat, long) in route:
+            (latd, latm, lats) = lat
+            (longd, longm, longs) = long
+
+            alt = self.get_min_alt_at((latd, latm, 0), (longd, longm, 0))
+            if alt is not None and alt > output:
+                output = alt
+        if output > 0:
+            return output
+        return None
+
+    def get_min_alt_at(self, lat, long):
+        (lat_d, lat_m, lat_s) = lat
+        (long_d, long_m, long_s) = long
+
+        if lat_m <= 30:
+            lat_m = 0
+        else:
+            lat_m = 30
+
+        if long_m <= 30:
+            long_m = 0
+        else:
+            long_m = 30
+
+        key = ((lat_d, lat_m, 0), (long_d, long_m, 0))
+
+        if key in self.altitude_map:
+            return self.altitude_map[key]
+        return None
 
     def get_pixels_for(self, lat, long):
         (lat_d, lat_m, lat_s) = lat
@@ -92,6 +151,23 @@ class MapFile:
             math.floor((pixels_2_long[1] - pixels_1[1]) / delta_long),
         )
         return pixel_delta_per_lat_d, pixels_delta_per_long_d
+
+
+def import_altitude_map(dcs_map_name):
+    output = {}
+    filename = path.join(bundle_dir, "./data/%s/altitudes.csv" % dcs_map_name)
+    if os.path.exists(filename):
+        with open(filename, newline='') as csv_file:
+            reader = csv.reader(csv_file, delimiter=',', quotechar='|')
+            for i, row in enumerate(reader):
+                if i > 0:
+                    if len(row) != 5:
+                        raise Exception("Invalid Altitude Map")
+                    output[(
+                        (int(row[0].strip()), int(row[1].strip()), 0),
+                        (int(row[2].strip()), int(row[3].strip()), 0)
+                    )] = int(row[4].strip())
+    return output
 
 
 def import_pixel_map(dcs_map_name):
