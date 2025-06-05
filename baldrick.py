@@ -8,12 +8,10 @@ from tot_planner import parse_time
 
 bundle_dir = path.abspath(path.dirname(__file__))
 cwd = os.getcwd()
-print("CWD: %s" % cwd)
 
 
 def main():
     route_name = sys.argv[1]
-    # route_file = "./routes/%s.csv" % route_name
     route_file = path.join(cwd, 'routes\\%s.csv' % route_name)
     # Args 2 and 3 are either ToT and blank or Start Time and ToT
     start_time = (0, 0, 0)
@@ -35,12 +33,12 @@ def main():
         f.write(route.write_flight_notes())
     legend_filename = path.join(bundle_dir, "./data/legend.jpg")
     legend_copy_loc = path.join(cwd, "./%s/legend.jpg" % route_name)
+
     shutil.copyfile(legend_filename, legend_copy_loc)
     route.save_boards()
+
     shutil.make_archive(path.join(cwd, "./%s_bundle" % route_name), 'zip', path.join(cwd, "./%s" % route_name))
-    # shutil.make_archive("./%s_bundle" % route_name, 'zip', "./%s" % route_name)
     shutil.move(path.join(cwd, "./%s_bundle.zip" % route_name), path.join(cwd, "./%s/%s_bundle.zip" % (route_name, route_name)))
-    # shutil.move("./%s_bundle.zip" % route_name, "./%s/%s_bundle.zip" % (route_name, route_name))
 
 
 if __name__ == '__main__':

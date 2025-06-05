@@ -95,7 +95,8 @@ class Route:
                 wp.bearing_to_next = next_wp.bearing_from(wp)
 
     def set_tot_times(self):
-        [target_wp] = [x for x in self.waypoints if "TGT" in x.tags]
+        targets = [x for x in self.waypoints if "TGT" in x.tags]
+        target_wp = targets[-1]
         timed_route = self.waypoints[0:target_wp.index+1]
 
         distances = list(map(lambda wp: wp.distance_from_last, timed_route))

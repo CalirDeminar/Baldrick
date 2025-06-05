@@ -10,4 +10,5 @@ if __name__ == '__main__':
     subprocess.call(r"PyInstaller baldrick.spec")
     os.mkdir('./dist/baldrick/routes')
     shutil.copy('./routes/example.csv', './dist/baldrick/routes/example.csv')
+    shutil.copy('./config.json', './dist/baldrick/config.json')
     shutil.make_archive("./dist/baldrick", "zip", "./dist/baldrick")

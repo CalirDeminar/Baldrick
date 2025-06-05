@@ -1,10 +1,18 @@
 import math
+import json
 
 
 # returns shape (Speed, hold_time_hrs) or None
-def find_speed_and_hold(distances, dash_speed, time_hrs, min_cruise_speed=360):
+def find_speed_and_hold(distances, dash_speed, time_hrs, min_cruise_speed):
+    config = {}
+    with open('./config.json') as f:
+        config = json.load(f)
+    print("config: ", config)
+    default_speed = config["defaultCruiseSpeed"]
+    if min_cruise_speed is None:
+        min_cruise_speed = config["minCruiseSpeed"]
     if time_hrs is None:
-        return 420, 0
+        return default_speed, 0
     distances = list(map(lambda i:  0 if i is None else i, distances))
     cruise = distances[0:-1]
     dash_distance = distances[-1]
@@ -23,7 +31,7 @@ def find_speed_and_hold(distances, dash_speed, time_hrs, min_cruise_speed=360):
     return math.floor(cruise_distance/best_time), hold
 
 
-def get_waypoint_times(distances, start_time, time_on_target, dash_speed=500, min_cruise_speed=300):
+def get_waypoint_times(distances, start_time, time_on_target, dash_speed=500, min_cruise_speed=None):
     # print("TOT: %s" % time_on_target)
 
     duration_hrs = None
