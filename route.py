@@ -1,6 +1,6 @@
 import csv
 import math
-from waypoint import WayPoint
+from waypoint import WayPoint, lat_long_to_string
 from map_file import MapFile, find_map_from_wp
 from tot_planner import get_waypoint_times, time_to_minutes
 import PIL
@@ -321,8 +321,10 @@ class Route:
         note_newlines = wp.notes.count("\\n")
 
         notes = wp.notes.split("\\n")
-        if notes is None:
-            notes = [""]
+        if notes is None or notes == ['']:
+            notes = []
+        if "FIX" in wp.tags:
+            notes.append("FIX: %s" % lat_long_to_string(wp.lat, wp.long))
         for i, note in enumerate(notes):
             notes[i] = note.strip()
         lines = [
@@ -335,7 +337,6 @@ class Route:
             ("NMC:", [next_heading]),
             ("", notes)
         ]
-
         headings_width = max(map(lambda j: draw.textlength(j[0], font_size=font_height), lines))
         # values_width = max(map(lambda j: draw.textlength(j[1], font_size=font_height), lines))
 
@@ -347,7 +348,7 @@ class Route:
                             draw.textlength(k, font_size=font_height) - (0 if len(j[0]) > 0 else headings_width),
                         j[1]
                     )
-                ),
+                ) if len(j[1]) > 0 else 0,
                 lines
             )
         )
@@ -498,14 +499,11 @@ class Route:
 
             name_padding = " " * (max_name_len - len(wp.name))
             output += (
-                    "%s%s\tN%02d %02d E%02d %02d\t%s\n" %
+                    "%s%s\t%s\t%s\n" %
                     (
                         wp.name,
                         name_padding,
-                        wp.lat[0],
-                        wp.lat[1] + lat_second_round,
-                        wp.long[0],
-                        wp.long[1] + long_second_round,
+                        lat_long_to_string(wp.lat, wp.long),
                         ", ".join(wp.tags)
                     )
             )

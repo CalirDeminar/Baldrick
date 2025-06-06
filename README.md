@@ -27,9 +27,7 @@ Tags for a waypoint can be:
 - *Some Positive Integer* - Minimum terrain altitude for leg
 - TGT - marks the waypoint as the target. This is what the time on target calculations will aimed to get to on time
 - IP - marks the waypoint as the IP
-- FI - Fence In - TBI
-- FO - Fence Out - TBI
-- FIX - Navigation fix point - TBI
+- FIX - Navigation fix point - Automatically includes the coordinates for the fix in the notes for this leg's card
 - MAGVAR*+/- some decimal* - e.g. `MAGVAR-1.2` - The magnetic declination for this waypoint.
     The first of these tags will be used as the magnetic declination for the route. If not set will default to 0.0
 

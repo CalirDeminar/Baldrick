@@ -95,6 +95,22 @@ def to_lat_long(lat, long):
     )
 
 
+def lat_long_to_string(lat, long):
+    lat_second_round = 0
+    if lat[2] >= 30:
+        lat_second_round = 1
+    long_second_round = 0
+    if long[2] >= 30:
+        long_second_round = 1
+
+    return "N%02d %02d E%02d %02d" % (
+                lat[0],
+                lat[1] + lat_second_round,
+                long[0],
+                long[1] + long_second_round
+            )
+
+
 class TestWaypoint(unittest.TestCase):
     def test_bearing_correct_on_long(self):
         self.assertEqual(
