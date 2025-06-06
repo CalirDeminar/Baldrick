@@ -56,7 +56,11 @@ class MapFile:
 
         dyd = lat1d - lat2d
         dxd = long1d - long2d
-        m = dyd / dxd
+
+        # TODO - crappy div/0 protection here
+        m = 10000
+        if dxd > 0:
+            m = dyd / dxd
 
         rng = np.arange(long1d, long2d, 0.1, dtype=float)
 

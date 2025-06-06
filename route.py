@@ -318,24 +318,46 @@ class Route:
         if wp.min_alt is not None:
             min_alt = f"{wp.min_alt:,}ft"
 
+        note_newlines = wp.notes.count("\\n")
+
+        notes = wp.notes.split("\\n")
+        if notes is None:
+            notes = [""]
+        for i, note in enumerate(notes):
+            notes[i] = note.strip()
         lines = [
-            ("WP:", wp.name),
-            ("MC:", heading),
-            ("DIST:", distance),
-            ("ETA:", time),
-            ("ESA:", min_alt),
-            ("TAS:", speed),
-            ("NMC:", next_heading)
+            ("WP:", [wp.name]),
+            ("MC:", [heading]),
+            ("DIST:", [distance]),
+            ("ETA:", [time]),
+            ("ESA:", [min_alt]),
+            ("TAS:", [speed]),
+            ("NMC:", [next_heading]),
+            ("", notes)
         ]
 
         headings_width = max(map(lambda j: draw.textlength(j[0], font_size=font_height), lines))
-        values_width = max(map(lambda j: draw.textlength(j[1], font_size=font_height), lines))
+        # values_width = max(map(lambda j: draw.textlength(j[1], font_size=font_height), lines))
+
+        values_width = max(
+            map(
+                lambda j: max(
+                    map(
+                        lambda k:
+                            draw.textlength(k, font_size=font_height) - (0 if len(j[0]) > 0 else headings_width),
+                        j[1]
+                    )
+                ),
+                lines
+            )
+        )
         column_space = img.width * 0.005
 
         # background_x_min = math.floor(img.width*0.66)
         background_x_min = 0
         # background_base = (img.height*0.33)
-        background_base = img.height - (len(lines) * (font_height + margin))
+        line_count = sum(map(lambda k: len(k[1]), lines))
+        background_base = img.height - (line_count * (font_height + margin))
         background_width = math.floor(headings_width + values_width + column_space + margin*2)
         line_width = math.floor(img.width*0.004)
 
@@ -343,16 +365,16 @@ class Route:
             [
                 (background_x_min, background_base),
                 (background_x_min + background_width, background_base),
-                (background_x_min + background_width, background_base + (font_height+margin)*len(lines)),
-                (background_x_min, background_base + (font_height+margin)*len(lines)),
+                (background_x_min + background_width, background_base + (font_height+margin)*line_count),
+                (background_x_min, background_base + (font_height+margin)*line_count),
             ],
             (0, 0, 0, 255),
             (255, 255, 255, 200),
             width=line_width
         )
-
+        height = background_base
         for i, (heading, value) in enumerate(lines):
-            height = background_base + ((margin + font_height) * i)
+            # height = background_base + ((margin + font_height) * i)
             draw.line(
                 [
                     (background_x_min, height),
@@ -369,14 +391,22 @@ class Route:
                 fill="white",
                 font_size=font_height
             )
-            draw.text(
-                (background_x_min + margin + headings_width + column_space, height + margin/3),
-                value,
-                # font=font,
-                align="left",
-                fill="white",
-                font_size=font_height
-            )
+            for i2, t in enumerate(value):
+                headings_space = headings_width
+                if len(heading) == 0:
+                    headings_space = 0
+                x = round(background_x_min + margin + headings_space + column_space)
+                y = round(height + margin/3)
+
+                draw.text(
+                    (x, y),
+                    t,
+                    # font=font,
+                    align="left",
+                    fill="white",
+                    font_size=font_height
+                )
+                height += margin + font_height
         return img
 
     def create_board_for_wp(self, index):

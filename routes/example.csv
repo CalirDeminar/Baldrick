@@ -1,6 +1,6 @@
-name, latd, latm, lats, longd, longm, longs, tags
-43-42, 43, 0, 0, 42, 0, 0, 50, MAGVAR+1.2
-43-43, 43, 0, 0, 43, 0, 0, FI
-42-43, 42, 0, 0, 43, 0, 0, 1234, IP
-42-42, 42, 0, 0, 42, 0, 0, TGT
-43-42centre, 42, 30, 0, 42, 30, 0, 1523, FO
+name, latd, latm, lats, longd, longm, longs, notes, tags
+43-42, 43, 0, 0, 42, 0, 0, 50,, MAGVAR+1.2
+43-43, 43, 0, 0, 43, 0, 0, briefing note, FI
+42-43, 42, 0, 0, 43, 0, 0, example multi-\nline note, 1234, IP
+42-42, 42, 0, 0, 42, 0, 0,, TGT
+43-42centre, 42, 30, 0, 42, 30, 0,, 1523, FO

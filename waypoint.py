@@ -18,9 +18,10 @@ class WayPoint:
     tags = []
     speed = None
     min_alt = None
+    notes = ""
 
     def __init__(self, string_list_to_parse, index):
-        if len(string_list_to_parse) < 7:
+        if len(string_list_to_parse) < 8:
             raise Exception("Invalid Way Point List Line")
         lat = (
             int(string_list_to_parse[1].strip()),
@@ -36,7 +37,8 @@ class WayPoint:
         self.lat = lat
         self.long = long
         self.index = index
-        taggables = list(map(lambda i: i.strip(), string_list_to_parse[7:]))
+        self.notes = string_list_to_parse[7].strip()
+        taggables = list(map(lambda i: i.strip(), string_list_to_parse[8:]))
         digit_tags = list(
             filter(
                 lambda i: i.isdigit(),
