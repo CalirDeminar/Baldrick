@@ -1,5 +1,6 @@
 import csv
 import math
+import json
 from waypoint import WayPoint, lat_long_to_string
 from map_file import MapFile, find_map_from_wp
 from tot_planner import get_waypoint_times, time_to_minutes
@@ -283,6 +284,10 @@ class Route:
         ))
 
     def crop_overview_board(self, img):
+        config = {}
+        with open('./config.json') as f:
+            config = json.load(f)
+
         x_max = 0
         x_min = img.width
         y_max = 0
@@ -302,12 +307,18 @@ class Route:
         x_margin = round((x_max - x_min)*0.1)
         y_margin = round((y_max - y_min)*0.1)
 
-        return img.crop((
+        cropped = img.crop((
             max(x_min - x_margin, 0),
             max(y_min - y_margin, 0),
             min(x_max + x_margin, img.width),
             min(y_max + y_margin, img.height)
         ))
+        downsample_factor = float(config["overviewCardDownsampleFactor"])
+        cropped = cropped.resize(
+            (round(cropped.width/downsample_factor), round(cropped.height/downsample_factor)),
+            resample=PIL.Image.BILINEAR
+        )
+        return cropped
 
 
     def add_doghouse_for_wp(self, index, img):

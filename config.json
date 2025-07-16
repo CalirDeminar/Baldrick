@@ -1,4 +1,5 @@
 {
   "minCruiseSpeed": 360,
-  "defaultCruiseSpeed": 420
+  "defaultCruiseSpeed": 420,
+  "overviewCardDownsampleFactor": 3
 }
