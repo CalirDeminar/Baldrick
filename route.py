@@ -282,6 +282,34 @@ class Route:
             y + (board_height / 2)
         ))
 
+    def crop_overview_board(self, img):
+        x_max = 0
+        x_min = img.width
+        y_max = 0
+        y_min = img.height
+
+        for wp in self.waypoints:
+            (x, y) = self.map.get_pixels_for(wp.lat, wp.long)
+            if x > x_max:
+                x_max = x
+            if x < x_min:
+                x_min = x
+            if y > y_max:
+                y_max = y
+            if y < y_min:
+                y_min = y
+
+        x_margin = round((x_max - x_min)*0.1)
+        y_margin = round((y_max - y_min)*0.1)
+
+        return img.crop((
+            max(x_min - x_margin, 0),
+            max(y_min - y_margin, 0),
+            min(x_max + x_margin, img.width),
+            min(y_max + y_margin, img.height)
+        ))
+
+
     def add_doghouse_for_wp(self, index, img):
         wp = self.waypoints[index]
         draw = ImageDraw.Draw(img, 'RGBA')
@@ -436,8 +464,8 @@ class Route:
                 annotated_board.save(board_name)
                 print("%s/%s  %s Board Complete" % (i, len(self.waypoints)-1, board_name))
 
-        # full_board = self.create_board_for_wp(i)
-        # full_board.save("./%s/%s-Overview.jpg" % (self.name, self.map.name))
+        full_board = self.crop_overview_board(self.create_board_for_wp(i))
+        full_board.save("./%s/%s-Overview.jpg" % (self.name, self.map.name))
 
     def debug_doghouse(self):
         for index, wp in enumerate(self.waypoints):
