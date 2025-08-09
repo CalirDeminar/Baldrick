@@ -22,15 +22,15 @@ cropping_margin = 8000
 
 
 class Route:
-    name = None
-    map = None
-    waypoints = []
-    start_time = None
-    time_on_target = None
-    cruise_speed = None
-    dash_speed = 500
+    name: 'str | None' = None
+    map: 'MapFile | None' = None
+    waypoints: [WayPoint] = []
+    start_time: '(int, int, int) | None' = None
+    time_on_target: '(int, int, int) | None' = None
+    cruise_speed: 'int | None' = None
+    dash_speed: int = 500
 
-    def __init__(self, route_name, start_time=(0, 0, 0), time_on_target=None):
+    def __init__(self, route_name: str, start_time: (int, int, int) = (0, 0, 0), time_on_target=None):
         route_filename = "./routes/%s.csv" % route_name
 
         with open(route_filename, newline='') as csv_file:
@@ -105,19 +105,23 @@ class Route:
     def set_tot_times(self):
         targets = [x for x in self.waypoints if "TGT" in x.tags]
         target_wp = targets[-1]
-        timed_route = self.waypoints[0:target_wp.index+1]
+        push_wps = [x for x in self.waypoints if "PUSH" in x.tags]
+        push_wp_index = push_wps[-1].index if len(push_wps) > 0 else 0
+
+        timed_route = self.waypoints[push_wp_index:target_wp.index+1]
 
         distances = list(map(lambda wp: wp.distance_from_last, timed_route))
         (times, speed) = get_waypoint_times(distances, self.start_time, self.time_on_target, self.dash_speed)
         self.cruise_speed = speed
         for i, time in enumerate(times):
-            if i <= len(self.waypoints):
-                self.waypoints[i].time = time
-                self.waypoints[i].speed = speed
-                if i == len(self.waypoints)-1:
-                    self.waypoints[i].speed = self.dash_speed
+            index = i + push_wp_index
+            if index <= len(self.waypoints):
+                self.waypoints[index].time = time
+                self.waypoints[index].speed = speed
+                if index == target_wp.index:
+                    self.waypoints[index].speed = self.dash_speed
 
-    def kneeboard_width_for_wp_index(self, i, min_width=800, min_height=1200):
+    def kneeboard_width_for_wp_index(self, i: int, min_width: int = 800, min_height: int = 1200):
         if i < 1:
             return min_width, min_height
         current = self.waypoints[i]
@@ -134,7 +138,7 @@ class Route:
 
         return width * margin_ratio, height * margin_ratio
 
-    def draw_for_wp_index(self, index, draw, circle_radius, line_width, is_focused):
+    def draw_for_wp_index(self, index: int, draw: 'ImageDraw', circle_radius: int, line_width: int, is_focused: bool):
         wp = self.waypoints[index]
         # (x_cur, y_cur) = self.map.get_pixels_for(wp.lat, wp.long)
         x_cur = wp.x_pixel
@@ -175,7 +179,15 @@ class Route:
                 width=line_width
             )
 
-    def draw_route_for_wp_from_prev(self, img, index, draw, circle_radius, line_width, is_focused):
+    def draw_route_for_wp_from_prev(
+            self,
+            img: 'Image',
+            index: int,
+            draw: 'ImageDraw',
+            circle_radius: int,
+            line_width: int,
+            is_focused: bool
+    ):
         if index > 0:
             wp = self.waypoints[index]
             prev = self.waypoints[index-1]
@@ -251,7 +263,7 @@ class Route:
                     #     font_size=50,
                     # )
 
-    def crop_board_for_wp(self, index, img):
+    def crop_board_for_wp(self, index: int, img: 'Image'):
         wp = self.waypoints[index]
         # (x, y) = self.map.get_pixels_for(wp.lat, wp.long)
         x = wp.x_pixel
@@ -283,7 +295,7 @@ class Route:
             y + (board_height / 2)
         ))
 
-    def crop_overview_board(self, img):
+    def crop_overview_board(self, img: 'Image'):
         config = {}
         with open('./config.json') as f:
             config = json.load(f)
@@ -320,8 +332,7 @@ class Route:
         )
         return cropped
 
-
-    def add_doghouse_for_wp(self, index, img):
+    def add_doghouse_for_wp(self, index: int, img: 'Image'):
         wp = self.waypoints[index]
         draw = ImageDraw.Draw(img, 'RGBA')
         font_height = get_font_size(img)
@@ -449,7 +460,7 @@ class Route:
                 height += margin + font_height
         return img
 
-    def create_board_for_wp(self, index):
+    def create_board_for_wp(self, index: int):
         img = self.get_cropped_map_image()
 
         draw = ImageDraw.Draw(img, "RGBA")

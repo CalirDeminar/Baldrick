@@ -20,7 +20,7 @@ class WayPoint:
     min_alt = None
     notes = ""
 
-    def __init__(self, string_list_to_parse, index):
+    def __init__(self, string_list_to_parse: str, index: int):
         if len(string_list_to_parse) < 8:
             raise Exception("Invalid Way Point List Line")
         lat = (
@@ -54,7 +54,7 @@ class WayPoint:
             )
         )
 
-    def bearing_from(self, previous):
+    def bearing_from(self, previous: 'WayPoint'):
         own_lat = math.radians(self.lat[0] + (self.lat[1]/60) + (self.lat[2]/3600))
         own_long = math.radians(self.long[0] + (self.long[1]/60) + (self.long[2]/3600))
 
@@ -69,18 +69,18 @@ class WayPoint:
     def to_degrees(self):
         return to_degrees(self.lat, self.long)
 
-    def distance_from(self, wp):
+    def distance_from(self, wp: 'WayPoint'):
         return haversine.haversine(self.to_degrees(), wp.to_degrees(), unit=Unit.NAUTICAL_MILES)
 
 
-def to_degrees(lat, long):
+def to_degrees(lat: (int, int, int), long: (int, int, int)):
     return (
         lat[0] + (lat[1]/60) + (lat[2]/3600),
         long[0] + (long[1]/60) + (long[2]/3600)
     )
 
 
-def to_lat_long(lat, long):
+def to_lat_long(lat: float, long: float):
     lat_d = round(lat)
     lat_m = round((lat - lat_d)*60)
     lat_s = round((lat - lat_d - (lat_m/60))*60*60)
@@ -95,7 +95,7 @@ def to_lat_long(lat, long):
     )
 
 
-def lat_long_to_string(lat, long):
+def lat_long_to_string(lat: (int, int, int), long: (int, int, int)):
     lat_second_round = 0
     if lat[2] >= 30:
         lat_second_round = 1

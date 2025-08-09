@@ -5,9 +5,10 @@ import os
 from os import path
 from decimal import *
 import numpy as np
-from waypoint import to_degrees, to_lat_long
+from waypoint import to_degrees, to_lat_long, WayPoint
 
 bundle_dir = path.abspath(path.dirname(__file__))
+
 
 
 class MapFile:
@@ -28,7 +29,7 @@ class MapFile:
         self.coordinate_map = import_pixel_map(dcs_map_name)
         self.altitude_map = import_altitude_map(dcs_map_name)
 
-    def get_angle_off_north(self, lat, long):
+    def get_angle_off_north(self, lat: (int, int, int), long: (int, int, int)):
         (lat_1, _, _) = lat
         (long_1, _, _) = long
 
@@ -43,7 +44,7 @@ class MapFile:
         filename = path.join(bundle_dir, "./data/%s/map.jpg" % self.name)
         return Image.open(filename)
 
-    def get_min_alt_between(self, wp1, wp2):
+    def get_min_alt_between(self, wp1: 'WayPoint', wp2: 'WayPoint'):
         lat1 = wp1.lat
         long1 = wp1.long
         lat2 = wp2.lat
@@ -81,7 +82,7 @@ class MapFile:
             return output
         return None
 
-    def get_min_alt_at(self, lat, long):
+    def get_min_alt_at(self, lat: (int, int, int), long: (int, int, int)):
         (lat_d, lat_m, lat_s) = lat
         (long_d, long_m, long_s) = long
 
@@ -101,7 +102,7 @@ class MapFile:
             return self.altitude_map[key]
         return None
 
-    def get_pixels_for(self, lat, long):
+    def get_pixels_for(self, lat: (int, int, int), long: (int, int, int)):
         (lat_d, lat_m, lat_s) = lat
         (long_d, long_m, long_s) = long
         (start_x, start_y) = self.coordinate_map[(lat[0], long[0])]
@@ -119,7 +120,7 @@ class MapFile:
 
         return math.floor(start_x + x_offset), math.floor(start_y + y_offset)
 
-    def get_nearest_lat_long(self, lat, long, inclusive=True, inverted=False):
+    def get_nearest_lat_long(self, lat: (int, int, int), long: (int, int, int), inclusive: bool = True, inverted: bool = False):
         available_lats = list(set(map(lambda k: k[0], self.coordinate_map.keys())))
         available_longs = list(set(map(lambda k: k[1], self.coordinate_map.keys())))
         if not inclusive:
@@ -135,7 +136,7 @@ class MapFile:
 
         return available_lats[0], available_longs[0]
 
-    def get_translation_multipliers_for(self, lat, long, debug=False):
+    def get_translation_multipliers_for(self, lat: (int, int, int), long: (int, int, int), debug: bool = False):
         (lat_1, long_1) = self.get_nearest_lat_long(lat, long)
         (lat_2, long_2) = self.get_nearest_lat_long(lat, long, inclusive=False, inverted=True)
 
@@ -157,7 +158,7 @@ class MapFile:
         return pixel_delta_per_lat_d, pixels_delta_per_long_d
 
 
-def import_altitude_map(dcs_map_name):
+def import_altitude_map(dcs_map_name: str):
     output = {}
     filename = path.join(bundle_dir, "./data/%s/altitudes.csv" % dcs_map_name)
     if os.path.exists(filename):
@@ -174,7 +175,7 @@ def import_altitude_map(dcs_map_name):
     return output
 
 
-def import_pixel_map(dcs_map_name):
+def import_pixel_map(dcs_map_name: str):
     output = {}
     filename = path.join(bundle_dir, "./data/%s/map.csv" % dcs_map_name)
     with open(filename, newline='') as csv_file:
@@ -188,7 +189,7 @@ def import_pixel_map(dcs_map_name):
     return output
 
 
-def find_pixel_map_lat_long_bounds(dcs_map_name):
+def find_pixel_map_lat_long_bounds(dcs_map_name: str):
     pixel_map = import_pixel_map(dcs_map_name)
     keys = list(pixel_map.keys())
     lat_set = set(map(lambda i: i[0], keys))
@@ -196,7 +197,7 @@ def find_pixel_map_lat_long_bounds(dcs_map_name):
     return (min(lat_set), max(lat_set)), (min(long_set), max(long_set))
 
 
-def find_map_from_wp(lat, long):
+def find_map_from_wp(lat: (int, int, int), long: (int, int, int)):
     (lat_d, _, _) = lat
     (long_d, _, _) = long
     folder_name = path.join(bundle_dir, ".\\data")

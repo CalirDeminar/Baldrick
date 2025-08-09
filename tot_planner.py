@@ -3,7 +3,7 @@ import json
 
 
 # returns shape (Speed, hold_time_hrs) or None
-def find_speed_and_hold(distances, dash_speed, time_hrs, min_cruise_speed):
+def find_speed_and_hold(distances: [float], dash_speed: int, time_hrs: float, min_cruise_speed: int):
     config = {}
     with open('./config.json') as f:
         config = json.load(f)
@@ -31,7 +31,13 @@ def find_speed_and_hold(distances, dash_speed, time_hrs, min_cruise_speed):
     return math.floor(cruise_distance/best_time), hold
 
 
-def get_waypoint_times(distances, start_time, time_on_target, dash_speed=500, min_cruise_speed=None):
+def get_waypoint_times(
+        distances: [float],
+        start_time: (int, int, int),
+        time_on_target: (int, int, int),
+        dash_speed: int = 500,
+        min_cruise_speed: 'int | None' = None
+        ):
     # print("TOT: %s" % time_on_target)
 
     duration_hrs = None
@@ -60,21 +66,21 @@ def get_waypoint_times(distances, start_time, time_on_target, dash_speed=500, mi
     return output, speed
 
 
-def parse_time(time):
+def parse_time(time: str):
     splits = time.split(":")
     if len(splits) != 3:
         raise Exception("%s is not a valid time")
     return int(splits[0].strip()), int(splits[1].strip()), int(splits[2].strip())
 
 
-def hours_to_time(t):
+def hours_to_time(t: float):
     hours = math.floor(t)
     minutes = math.floor((t-hours)*60)
     seconds = math.floor(((t*60)-(hours*60)-minutes)*60)
     return hours, minutes, seconds
 
 
-def time_to_minutes(t):
+def time_to_minutes(t: (int, int, int)):
     seconds = t[2]/60
     minutes = t[1]
     hours = t[0]*60
