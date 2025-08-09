@@ -31,6 +31,13 @@ class Route:
     dash_speed: int = 500
 
     def __init__(self, route_name: str, start_time: (int, int, int) = (0, 0, 0), time_on_target=None):
+        config = {}
+        with open('./config.json') as f:
+            config = json.load(f)
+
+        if "dashSpeed" in config:
+            self.dash_speed = config['dashSpeed']
+
         route_filename = "./routes/%s.csv" % route_name
 
         with open(route_filename, newline='') as csv_file:

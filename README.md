@@ -1,10 +1,13 @@
-# Dead Reckoning Kneeboard Generator
+# Baldrick: Navigation Kneeboard Generator
 
 A tool for flight-simmers to turn a flight route in a CSV file into a set of kneeboard images containing:
 - Leg Headings
 - Timings for each leg
 - Distances for each leg
 - Speeds
+
+A legend kneeboard card will also be included, along with an overview card of the entire route,
+and all of the above bundled into a zip file for easy sharing before a mission.
 
 ## Usage
 ### Route File
@@ -25,14 +28,25 @@ The columns for each WP are:
 
 Tags for a waypoint can be:
 - *Some Positive Integer* - Minimum terrain altitude for leg
+- PUSH - marks the waypoint from which the ToT calculations will start. If not included the first WP will be used
 - TGT - marks the waypoint as the target. This is what the time on target calculations will aimed to get to on time
 - IP - marks the waypoint as the IP
 - FIX - Navigation fix point - Automatically includes the coordinates for the fix in the notes for this leg's card
 - MAGVAR*+/- some decimal* - e.g. `MAGVAR-1.2` - The magnetic declination for this waypoint.
     The first of these tags will be used as the magnetic declination for the route. If not set will default to 0.0
+    
+### Config.json
+The tool has a number of default values that it uses for certain calculations.
+These values can be found in and changed in the config.json
+These values are:
+- "minCruiseSpeed": The minimum speed the ToT planner will allow a leg to be flown at
+- "defaultCruiseSpeed": The default speed of legs if no ToT is specified
+- "defaultDashSpeed": The speed that the IP to Target leg will be specified to be flown at
+- "overviewCardDownsampleFactor": The amount the overview card will be downsampled in resolution.
+This option is intended to allow bundle sizes to be kept reasonable for broad routes
 
 ### Command Arguments
-An example calling of the tool looks like `baldrick test 00:30:00`
+An example calling of the tool looks like `./baldrick test`
 The arguments are:
 - Route Name
 - Optional: start time in hours:minutes:seconds
