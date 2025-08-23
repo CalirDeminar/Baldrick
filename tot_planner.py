@@ -1,9 +1,10 @@
 import math
 import json
 
+from typing import List, Tuple, Union
 
 # returns shape (Speed, hold_time_hrs) or None
-def find_speed_and_hold(distances: [float], dash_speed: int, time_hrs: float, min_cruise_speed: int):
+def find_speed_and_hold(distances: List[float], dash_speed: int, time_hrs: float, min_cruise_speed: int):
     config = {}
     with open('./config.json') as f:
         config = json.load(f)
@@ -32,11 +33,11 @@ def find_speed_and_hold(distances: [float], dash_speed: int, time_hrs: float, mi
 
 
 def get_waypoint_times(
-        distances: [float],
-        start_time: (int, int, int),
-        time_on_target: (int, int, int),
+        distances: List[float],
+        start_time: Tuple[int, int, int],
+        time_on_target: Tuple[int, int, int],
         dash_speed: int = 500,
-        min_cruise_speed: 'int | None' = None
+        min_cruise_speed: Union[int, None] = None
         ):
     # print("TOT: %s" % time_on_target)
 
@@ -80,7 +81,7 @@ def hours_to_time(t: float):
     return hours, minutes, seconds
 
 
-def time_to_minutes(t: (int, int, int)):
+def time_to_minutes(t: Tuple[int, int, int]):
     seconds = t[2]/60
     minutes = t[1]
     hours = t[0]*60

@@ -3,24 +3,26 @@ import haversine
 from haversine import Unit
 import unittest
 
+from typing import List, Tuple, Union
+
 
 class WayPoint:
-    name = None
-    index = None
-    lat = None
-    long = None
-    x_pixel = None
-    y_pixel = None
-    bearing_from_last = None
-    bearing_to_next = None
-    distance_from_last = None
+    name: str = ''
+    index: int = -1
+    lat: Tuple[int, int, int] = [0, 0, 0]
+    long: Tuple[int, int, int] = [0, 0, 0]
+    x_pixel: int = 0
+    y_pixel: int = 0
+    bearing_from_last: Union[int, None] = None
+    bearing_to_next: Union[int, None] = None
+    distance_from_last: float = 0
     time = None
     tags = []
     speed = None
     min_alt = None
     notes = ""
 
-    def __init__(self, string_list_to_parse: str, index: int):
+    def __init__(self, string_list_to_parse: List[str], index: int):
         if len(string_list_to_parse) < 8:
             raise Exception("Invalid Way Point List Line")
         lat = (
@@ -73,7 +75,7 @@ class WayPoint:
         return haversine.haversine(self.to_degrees(), wp.to_degrees(), unit=Unit.NAUTICAL_MILES)
 
 
-def to_degrees(lat: (int, int, int), long: (int, int, int)):
+def to_degrees(lat: Tuple[int, int, int], long: Tuple[int, int, int]):
     return (
         lat[0] + (lat[1]/60) + (lat[2]/3600),
         long[0] + (long[1]/60) + (long[2]/3600)
@@ -95,7 +97,7 @@ def to_lat_long(lat: float, long: float):
     )
 
 
-def lat_long_to_string(lat: (int, int, int), long: (int, int, int)):
+def lat_long_to_string(lat: Tuple[int, int, int], long: Tuple[int, int, int]):
     lat_second_round = 0
     if lat[2] >= 30:
         lat_second_round = 1

@@ -6,6 +6,7 @@ from os import path
 from decimal import *
 import numpy as np
 from waypoint import to_degrees, to_lat_long, WayPoint
+from typing import Dict, Tuple, Set, List
 
 bundle_dir = path.abspath(path.dirname(__file__))
 
@@ -13,23 +14,23 @@ bundle_dir = path.abspath(path.dirname(__file__))
 
 class MapFile:
     # string
-    name = None
+    name: str = ''
     # string
-    filename = None
+    filename: str = ''
     # dict - (number, number) - (number, number)
     # (lat, long), (x, y)
-    coordinate_map = None
-    mag_var = 0
-    angle_off_north = None
-    altitude_map = None
+    coordinate_map: Dict[Tuple[int, int], Tuple[int, int]] = {}
+    mag_var: float = 0
+    angle_off_north: float = 0
+    altitude_map: Dict[Tuple[Tuple[int, int, int], Tuple[int, int, int]], int] = {}
 
-    def __init__(self, dcs_map_name):
+    def __init__(self, dcs_map_name: str):
         self.name = dcs_map_name
         self.filename = path.join(bundle_dir, "./data/%s/map.jpg" % dcs_map_name)
         self.coordinate_map = import_pixel_map(dcs_map_name)
         self.altitude_map = import_altitude_map(dcs_map_name)
 
-    def get_angle_off_north(self, lat: (int, int, int), long: (int, int, int)):
+    def get_angle_off_north(self, lat: Tuple[int, int, int], long: Tuple[int, int, int]):
         (lat_1, _, _) = lat
         (long_1, _, _) = long
 
@@ -82,7 +83,7 @@ class MapFile:
             return output
         return None
 
-    def get_min_alt_at(self, lat: (int, int, int), long: (int, int, int)):
+    def get_min_alt_at(self, lat: Tuple[int, int, int], long: Tuple[int, int, int]):
         (lat_d, lat_m, lat_s) = lat
         (long_d, long_m, long_s) = long
 
@@ -102,9 +103,10 @@ class MapFile:
             return self.altitude_map[key]
         return None
 
-    def get_pixels_for(self, lat: (int, int, int), long: (int, int, int)):
+    def get_pixels_for(self, lat: Tuple[int, int, int], long: Tuple[int, int, int]):
         (lat_d, lat_m, lat_s) = lat
         (long_d, long_m, long_s) = long
+
         (start_x, start_y) = self.coordinate_map[(lat[0], long[0])]
         (lat_multipliers, long_multipliers) = self.get_translation_multipliers_for(lat, long)
 
@@ -120,9 +122,9 @@ class MapFile:
 
         return math.floor(start_x + x_offset), math.floor(start_y + y_offset)
 
-    def get_nearest_lat_long(self, lat: (int, int, int), long: (int, int, int), inclusive: bool = True, inverted: bool = False):
-        available_lats = list(set(map(lambda k: k[0], self.coordinate_map.keys())))
-        available_longs = list(set(map(lambda k: k[1], self.coordinate_map.keys())))
+    def get_nearest_lat_long(self, lat: Tuple[int, int, int], long: Tuple[int, int, int], inclusive: bool = True, inverted: bool = False):
+        available_lats: List[int] = list(set(map(lambda k: k[0], self.coordinate_map.keys())))
+        available_longs: List[int] = list(set(map(lambda k: k[1], self.coordinate_map.keys())))
         if not inclusive:
             available_lats = list(filter(lambda i: i != lat[0], available_lats))
             available_longs = list(filter(lambda i: i != long[0], available_longs))
@@ -136,7 +138,7 @@ class MapFile:
 
         return available_lats[0], available_longs[0]
 
-    def get_translation_multipliers_for(self, lat: (int, int, int), long: (int, int, int), debug: bool = False):
+    def get_translation_multipliers_for(self, lat: Tuple[int, int, int], long: Tuple[int, int, int], debug: bool = False):
         (lat_1, long_1) = self.get_nearest_lat_long(lat, long)
         (lat_2, long_2) = self.get_nearest_lat_long(lat, long, inclusive=False, inverted=True)
 
@@ -147,11 +149,11 @@ class MapFile:
         pixels_2_lat = self.coordinate_map[(lat_2, long_1)]
         pixels_2_long = self.coordinate_map[(lat_1, long_2)]
 
-        pixel_delta_per_lat_d = (
+        pixel_delta_per_lat_d: Tuple[int, int] = (
             math.floor((pixels_2_lat[0] - pixels_1[0])/delta_lat),
             math.floor((pixels_2_lat[1] - pixels_1[1])/delta_lat),
         )
-        pixels_delta_per_long_d = (
+        pixels_delta_per_long_d: Tuple[int, int] = (
             math.floor((pixels_2_long[0] - pixels_1[0]) / delta_long),
             math.floor((pixels_2_long[1] - pixels_1[1]) / delta_long),
         )
@@ -159,7 +161,7 @@ class MapFile:
 
 
 def import_altitude_map(dcs_map_name: str):
-    output = {}
+    output: Dict[Tuple[Tuple[int, int, int], Tuple[int, int, int]], int] = {}
     filename = path.join(bundle_dir, "./data/%s/altitudes.csv" % dcs_map_name)
     if os.path.exists(filename):
         with open(filename, newline='') as csv_file:
@@ -176,7 +178,7 @@ def import_altitude_map(dcs_map_name: str):
 
 
 def import_pixel_map(dcs_map_name: str):
-    output = {}
+    output: Dict[Tuple[int, int], Tuple[int, int]] = {}
     filename = path.join(bundle_dir, "./data/%s/map.csv" % dcs_map_name)
     with open(filename, newline='') as csv_file:
         reader = csv.reader(csv_file, delimiter=',', quotechar='|')
@@ -192,12 +194,12 @@ def import_pixel_map(dcs_map_name: str):
 def find_pixel_map_lat_long_bounds(dcs_map_name: str):
     pixel_map = import_pixel_map(dcs_map_name)
     keys = list(pixel_map.keys())
-    lat_set = set(map(lambda i: i[0], keys))
-    long_set = set(map(lambda i: i[1], keys))
+    lat_set: Set[int] = set(map(lambda i: i[0], keys))
+    long_set: Set[int] = set(map(lambda i: i[1], keys))
     return (min(lat_set), max(lat_set)), (min(long_set), max(long_set))
 
 
-def find_map_from_wp(lat: (int, int, int), long: (int, int, int)):
+def find_map_from_wp(lat: Tuple[int, int, int], long: Tuple[int, int, int]):
     (lat_d, _, _) = lat
     (long_d, _, _) = long
     folder_name = path.join(bundle_dir, ".\\data")

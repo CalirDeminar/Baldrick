@@ -1,6 +1,9 @@
 import csv
 import math
 import json
+
+from typing import List, Tuple, Union
+
 from waypoint import WayPoint, lat_long_to_string
 from map_file import MapFile, find_map_from_wp
 from tot_planner import get_waypoint_times, time_to_minutes
@@ -22,15 +25,15 @@ cropping_margin = 8000
 
 
 class Route:
-    name: 'str | None' = None
-    map: 'MapFile | None' = None
-    waypoints: [WayPoint] = []
-    start_time: '(int, int, int) | None' = None
-    time_on_target: '(int, int, int) | None' = None
-    cruise_speed: 'int | None' = None
+    name: Union[str, None] = None
+    map: Union[MapFile, None] = None
+    waypoints: List[WayPoint] = []
+    start_time: Union[Tuple[int, int, int], None] = (0, 0, 0)
+    time_on_target: Union[Tuple[int, int, int], None] = None
+    cruise_speed: Union[int, None] = None
     dash_speed: int = 500
 
-    def __init__(self, route_name: str, start_time: (int, int, int) = (0, 0, 0), time_on_target=None):
+    def __init__(self, route_name: str, start_time: Tuple[int, int, int] = (0, 0, 0), time_on_target=None):
         config = {}
         with open('./config.json') as f:
             config = json.load(f)
@@ -84,7 +87,7 @@ class Route:
             for tag in wp.tags:
                 all_tags.append(tag)
 
-        magvar_tags = list(filter(lambda tag: "MAGVAR" in tag, all_tags))
+        magvar_tags = list(filter(lambda t: "MAGVAR" in t, all_tags))
 
         if len(magvar_tags) > 0:
             working_tag = magvar_tags[0].replace("MAGVAR", "").strip()
@@ -117,13 +120,13 @@ class Route:
 
         timed_route = self.waypoints[push_wp_index:target_wp.index+1]
 
-        distances = list(map(lambda wp: wp.distance_from_last, timed_route))
+        distances = list(map(lambda wp: float(wp.distance_from_last), timed_route))
         (times, speed) = get_waypoint_times(distances, self.start_time, self.time_on_target, self.dash_speed)
         self.cruise_speed = speed
-        for i, time in enumerate(times):
+        for i, t in enumerate(times):
             index = i + push_wp_index
             if index <= len(self.waypoints):
-                self.waypoints[index].time = time
+                self.waypoints[index].time = t
                 self.waypoints[index].speed = speed
                 if index == target_wp.index:
                     self.waypoints[index].speed = self.dash_speed
@@ -145,7 +148,7 @@ class Route:
 
         return width * margin_ratio, height * margin_ratio
 
-    def draw_for_wp_index(self, index: int, draw: 'ImageDraw', circle_radius: int, line_width: int, is_focused: bool):
+    def draw_for_wp_index(self, index: int, draw: ImageDraw, circle_radius: int, line_width: int, is_focused: bool):
         wp = self.waypoints[index]
         # (x_cur, y_cur) = self.map.get_pixels_for(wp.lat, wp.long)
         x_cur = wp.x_pixel
@@ -188,9 +191,9 @@ class Route:
 
     def draw_route_for_wp_from_prev(
             self,
-            img: 'Image',
+            img: Image,
             index: int,
-            draw: 'ImageDraw',
+            draw: ImageDraw,
             circle_radius: int,
             line_width: int,
             is_focused: bool
@@ -267,10 +270,10 @@ class Route:
                     #     "%s" % i,
                     #     fill="black",
                     #     align="left",
-                    #     font_size=50,
+                    #     font_size=50
                     # )
 
-    def crop_board_for_wp(self, index: int, img: 'Image'):
+    def crop_board_for_wp(self, index: int, img:  Image) -> Image:
         wp = self.waypoints[index]
         # (x, y) = self.map.get_pixels_for(wp.lat, wp.long)
         x = wp.x_pixel
@@ -302,7 +305,7 @@ class Route:
             y + (board_height / 2)
         ))
 
-    def crop_overview_board(self, img: 'Image'):
+    def crop_overview_board(self, img: Image):
         config = {}
         with open('./config.json') as f:
             config = json.load(f)
@@ -339,7 +342,7 @@ class Route:
         )
         return cropped
 
-    def add_doghouse_for_wp(self, index: int, img: 'Image'):
+    def add_doghouse_for_wp(self, index: int, img: Image):
         wp = self.waypoints[index]
         draw = ImageDraw.Draw(img, 'RGBA')
         font_height = get_font_size(img)
@@ -493,7 +496,7 @@ class Route:
                 annotated_board.save(board_name)
                 print("%s/%s  %s Board Complete" % (i, len(self.waypoints)-1, board_name))
 
-        full_board = self.crop_overview_board(self.create_board_for_wp(i))
+        full_board = self.crop_overview_board(self.create_board_for_wp(len(self.waypoints) - 1))
         full_board.save("./%s/%s-Overview.jpg" % (self.name, self.map.name))
 
     def debug_doghouse(self):
@@ -513,12 +516,12 @@ class Route:
             if wp.distance_from_last is not None:
                 distance = "%snm" % round(wp.distance_from_last, 1)
 
-            time = "N/A"
+            wp_time = "N/A"
             if wp.time is not None:
                 hours = ("%s" % wp.time[0]).zfill(2)
                 minutes = ("%s" % wp.time[1]).zfill(2)
                 seconds = ("%s" % wp.time[2]).zfill(2)
-                time = f"{hours}:{minutes}:{seconds}"
+                wp_time = f"{hours}:{minutes}:{seconds}"
 
             speed = "N/A"
             if wp.speed is not None:
@@ -532,7 +535,7 @@ class Route:
                 ("WP:", wp.name),
                 ("MC:", heading),
                 ("DIST:", distance),
-                ("ETA:", time),
+                ("ETA:", wp_time),
                 ("ESA:", min_alt),
                 ("TAS:", speed),
                 ("NMC:", next_heading)
