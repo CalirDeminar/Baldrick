@@ -39,11 +39,13 @@ Tags for a waypoint can be:
 The tool has a number of default values that it uses for certain calculations.
 These values can be found in and changed in the config.json
 These values are:
+- "metric": flags if the tool will read values in and out in metric instead of imperial
 - "minCruiseSpeed": The minimum speed the ToT planner will allow a leg to be flown at
 - "defaultCruiseSpeed": The default speed of legs if no ToT is specified
 - "defaultDashSpeed": The speed that the IP to Target leg will be specified to be flown at
 - "overviewCardDownsampleFactor": The amount the overview card will be downsampled in resolution.
 This option is intended to allow bundle sizes to be kept reasonable for broad routes
+- "routeColour": The hex colour code that drawings on the map will be made in
 
 ### Command Arguments
 An example calling of the tool looks like `./baldrick test`
