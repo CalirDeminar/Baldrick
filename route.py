@@ -470,7 +470,7 @@ class Route:
                 height += margin + font_height
         return img
 
-    def create_board_for_wp(self, index: int):
+    def create_board_for_wp(self, index: int, is_overview: bool = False):
         img = self.get_cropped_map_image()
 
         draw = ImageDraw.Draw(img, "RGBA")
@@ -480,9 +480,9 @@ class Route:
         for i, wp in enumerate(self.waypoints):
             is_current = i == index
             is_previous = i == index - 1
-            self.draw_for_wp_index(i, draw, circle_radius, line_width, is_previous or is_current)
+            self.draw_for_wp_index(i, draw, circle_radius, line_width, is_previous or is_current or is_overview)
 
-            self.draw_route_for_wp_from_prev(img, i,  draw, circle_radius, line_width, is_current)
+            self.draw_route_for_wp_from_prev(img, i,  draw, circle_radius, line_width, is_current or is_overview)
         return img
 
     def save_boards(self):
@@ -496,7 +496,7 @@ class Route:
                 annotated_board.save(board_name)
                 print("%s/%s  %s Board Complete" % (i, len(self.waypoints)-1, board_name))
 
-        full_board = self.crop_overview_board(self.create_board_for_wp(len(self.waypoints) - 1))
+        full_board = self.crop_overview_board(self.create_board_for_wp(len(self.waypoints) - 1, is_overview=True))
         full_board.save("./%s/%s-Overview.jpg" % (self.name, self.map.name))
 
     def debug_doghouse(self):
