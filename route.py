@@ -8,7 +8,7 @@ from waypoint import WayPoint, lat_long_to_string
 from map_file import MapFile, find_map_from_wp
 from tot_planner import get_waypoint_times, time_to_minutes
 import PIL
-from PIL import ImageDraw, Image, ImageOps
+from PIL import ImageDraw, Image, ImageOps, ImageColor
 import time
 PIL.Image.MAX_IMAGE_PIXELS = 10000000000
 
@@ -23,6 +23,20 @@ waypoint_circle_max_width = 20
 
 cropping_margin = 8000
 
+config = {}
+with open('./config.json') as f:
+    config = json.load(f)
+
+distance_unit = "nm"
+speed_unit = "kts"
+altitude_unit = "ft"
+is_metric = False
+
+if 'metric' in config and config['metric'] is True:
+    is_metric = True
+    distance_unit = "km"
+    speed_unit = "km/hr"
+    altitude_unit = "m"
 
 class Route:
     name: Union[str, None] = None
@@ -34,14 +48,11 @@ class Route:
     dash_speed: int = 500
 
     def __init__(self, route_name: str, start_time: Tuple[int, int, int] = (0, 0, 0), time_on_target=None):
-        config = {}
-        with open('./config.json') as f:
-            config = json.load(f)
 
         if "dashSpeed" in config:
             self.dash_speed = config['dashSpeed']
 
-        route_filename = "./routes/%s.csv" % route_name
+        route_filename = f"./routes/{route_name}.csv"
 
         with open(route_filename, newline='') as csv_file:
             reader = csv.reader(csv_file, delimiter=',', quotechar='|')
@@ -110,7 +121,11 @@ class Route:
         for wp in self.waypoints:
             if wp.index > 0 and wp.min_alt is None:
                 prev = self.waypoints[wp.index-1]
-                wp.min_alt = self.map.get_min_alt_between(wp, prev)
+                alt = self.map.get_min_alt_between(wp, prev)
+                if alt is not None:
+                    if is_metric:
+                        alt /= 3.28
+                    wp.min_alt = round(alt)
 
     def set_tot_times(self):
         targets = [x for x in self.waypoints if "TGT" in x.tags]
@@ -158,6 +173,11 @@ class Route:
         alpha = 150
         if is_focused:
             alpha = 255
+        colour = (0, 0, 0, alpha)
+        if "routeColour" in config:
+            hex_colour = config["routeColour"]
+            rgb_colour = ImageColor.getcolor(hex_colour, "RGB")
+            colour = (rgb_colour[0], rgb_colour[1], rgb_colour[2], alpha)
 
         if is_ip or is_tgt:
             if wp.bearing_from_last is None:
@@ -168,7 +188,7 @@ class Route:
                     (x_cur, y_cur, circle_radius),
                     3,
                     120 + self.map.get_angle_off_north(wp.lat, wp.long) - wp.bearing_from_last,
-                    outline=(0, 0, 0, alpha),
+                    outline= colour,
                     width=line_width
                 )
             if is_ip:
@@ -176,7 +196,7 @@ class Route:
                     (x_cur, y_cur, circle_radius),
                     4,
                     self.map.get_angle_off_north(wp.lat, wp.long) - wp.bearing_from_last,
-                    outline=(0, 0, 0, alpha),
+                    outline=colour,
                     width=line_width
                 )
         else:
@@ -185,7 +205,7 @@ class Route:
                     (x_cur - circle_radius, y_cur - circle_radius),
                     (x_cur + circle_radius, y_cur + circle_radius)
                 ),
-                outline=(0, 0, 0, alpha),
+                outline=colour,
                 width=line_width
             )
 
@@ -208,6 +228,8 @@ class Route:
             if "IP" in wp.tags:
                 wp_radius = circle_radius * 0.75
 
+
+
             # (x, y) = self.map.get_pixels_for(wp.lat, wp.long)
             # (x_prev, y_prev) = self.map.get_pixels_for(prev.lat, prev.long)
 
@@ -215,6 +237,11 @@ class Route:
             if is_focused:
                 alpha = 255
 
+            colour = (0, 0, 0, alpha)
+            if "routeColour" in config:
+                hex_colour = config["routeColour"]
+                rgb_colour = ImageColor.getcolor(hex_colour, "RGB")
+                colour = (rgb_colour[0], rgb_colour[1], rgb_colour[2], alpha)
             angle = math.atan2(prev.y_pixel - wp.y_pixel, prev.x_pixel - wp.x_pixel)
 
             draw.line(
@@ -222,7 +249,7 @@ class Route:
                     (prev.x_pixel - (circle_radius * math.cos(angle)), prev.y_pixel - (circle_radius * math.sin(angle))),
                     (wp.x_pixel + (wp_radius * math.cos(angle)), wp.y_pixel + (wp_radius * math.sin(angle)))
                 ),
-                (0, 0, 0, alpha),
+                colour,
                 line_width
             )
             if is_focused and wp.time is not None and prev.time is not None:
@@ -246,7 +273,7 @@ class Route:
                             (x_center + x_distance, y_center + y_distance),
                             (x_center - x_distance, y_center - y_distance)
                         ),
-                        (0, 0, 0, 255),
+                        colour,
                         math.floor(line_width/2)
                     )
                     temp = Image.new('L', (55, 55))
@@ -261,7 +288,7 @@ class Route:
                     direction_invert = 1
 
                     img.paste(
-                        ImageOps.colorize(rot, (0, 0, 0, 0), (0, 0, 0, 255)),
+                        ImageOps.colorize(rot, (0, 0, 0, 0), colour),
                         (math.floor((x_center + (x_distance * 2 * direction_invert))), math.floor(y_center + (y_distance * 2 * direction_invert))),
                         rot
                     )
@@ -352,31 +379,31 @@ class Route:
         heading = "N/A"
         if index > 0:
             prev = self.waypoints[index-1]
-            heading = "%s°" % ((wp.bearing_from(prev)-self.map.mag_var) % 360)
+            heading = f"{(wp.bearing_from(prev)-self.map.mag_var) % 360}°"
         next_heading = "N/A"
 
         if index < len(self.waypoints)-1:
             next_wp = self.waypoints[index+1]
-            next_heading = "%s°" % ((next_wp.bearing_from(wp)-self.map.mag_var) % 360)
+            next_heading = f"{(next_wp.bearing_from(wp)-self.map.mag_var) % 360}°"
 
         distance = "N/A"
         if wp.distance_from_last is not None:
-            distance = "%snm" % round(wp.distance_from_last, 1)
+            distance = f"{round(wp.distance_from_last, 1)}{distance_unit}"
 
         time = "N/A"
         if wp.time is not None:
-            hours = ("%s" % wp.time[0]).zfill(2)
-            minutes = ("%s" % wp.time[1]).zfill(2)
-            seconds = ("%s" % wp.time[2]).zfill(2)
+            hours = f"{wp.time[0]}".zfill(2)
+            minutes = f"{wp.time[1]}".zfill(2)
+            seconds = f"{wp.time[2]}".zfill(2)
             time = f"{hours}:{minutes}:{seconds}"
 
         speed = "N/A"
         if wp.speed is not None:
-            speed = "%skts" % wp.speed
+            speed = f"{wp.speed}{speed_unit}"
 
         min_alt = "N/A"
         if wp.min_alt is not None:
-            min_alt = f"{wp.min_alt:,}ft"
+            min_alt = f"{wp.min_alt:,}{altitude_unit}"
 
         note_newlines = wp.notes.count("\\n")
 

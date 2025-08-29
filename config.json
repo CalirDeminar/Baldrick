@@ -1,6 +1,8 @@
 {
+  "metric": false,
   "minCruiseSpeed": 360,
   "defaultCruiseSpeed": 420,
   "dashSpeed": 540,
-  "overviewCardDownsampleFactor": 3
+  "overviewCardDownsampleFactor": 3,
+  "routeColour": "#000000"
 }

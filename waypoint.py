@@ -1,10 +1,18 @@
 import math
 import haversine
+import json
 from haversine import Unit
 import unittest
 
 from typing import List, Tuple, Union
 
+config = {}
+with open('./config.json') as f:
+    config = json.load(f)
+
+unit = Unit.NAUTICAL_MILES
+if 'metric' in config and config['metric'] is True:
+    unit = Unit.KILOMETERS
 
 class WayPoint:
     name: str = ''
@@ -72,7 +80,7 @@ class WayPoint:
         return to_degrees(self.lat, self.long)
 
     def distance_from(self, wp: 'WayPoint'):
-        return haversine.haversine(self.to_degrees(), wp.to_degrees(), unit=Unit.NAUTICAL_MILES)
+        return haversine.haversine(self.to_degrees(), wp.to_degrees(), unit=unit)
 
 
 def to_degrees(lat: Tuple[int, int, int], long: Tuple[int, int, int]):
