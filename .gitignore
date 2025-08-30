@@ -3,3 +3,5 @@
 ./Test/*
 ./dist/*
 ./build/*
+map.jpg
+./data_backup/*
