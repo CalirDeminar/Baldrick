@@ -23,7 +23,7 @@ The columns for each WP are:
 - Longitude degrees component
 - Longitude minutes component
 - Longitude seconds component
-- Notes for the leg. Leave empty for no notes
+- Notes for the leg. Leave empty for no notes. `\n` in the note will add a line break to let a note be spread over multiple lines
 - Any additional tags for this waypoint
 
 Tags for a waypoint can be:
