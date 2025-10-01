@@ -4,13 +4,19 @@ import json
 
 from typing import List, Tuple, Union
 
+from src.config import Config
 from waypoint import WayPoint, lat_long_to_string
 from map_file import MapFile, find_map_from_wp
 from tot_planner import get_waypoint_times, time_to_minutes
 import PIL
 from PIL import ImageDraw, Image, ImageOps, ImageColor
-import time
+from os import path
+
 PIL.Image.MAX_IMAGE_PIXELS = 10000000000
+
+bundle_dir = path.abspath(path.dirname(__file__))
+
+routes_dir = path.join(bundle_dir, '../routes')
 
 aspect_ratio = 6 / 4
 # ratio of leg length we want the board height to be
@@ -23,20 +29,24 @@ waypoint_circle_max_width = 20
 
 cropping_margin = 8000
 
-config = {}
-with open('./config.json') as f:
-    config = json.load(f)
-
 distance_unit = "nm"
 speed_unit = "kts"
 altitude_unit = "ft"
 is_metric = False
 
-if 'metric' in config and config['metric'] is True:
+if Config.metric():
     is_metric = True
     distance_unit = "km"
     speed_unit = "km/hr"
     altitude_unit = "m"
+
+bundle_dir = path.abspath(path.dirname(__file__))
+
+is_prod = "_internal" in str(bundle_dir)
+
+output_root = path.join(bundle_dir, '../')
+if is_prod:
+    output_root = path.join(bundle_dir, '../')
 
 class Route:
     name: Union[str, None] = None
@@ -49,10 +59,9 @@ class Route:
 
     def __init__(self, route_name: str, start_time: Tuple[int, int, int] = (0, 0, 0), time_on_target=None):
 
-        if "dashSpeed" in config:
-            self.dash_speed = config['dashSpeed']
+        self.dash_speed = Config.dash_speed()
 
-        route_filename = f"./routes/{route_name}.csv"
+        route_filename = f"{routes_dir}/{route_name}.csv"
 
         with open(route_filename, newline='') as csv_file:
             reader = csv.reader(csv_file, delimiter=',', quotechar='|')
@@ -168,22 +177,19 @@ class Route:
         # (x_cur, y_cur) = self.map.get_pixels_for(wp.lat, wp.long)
         x_cur = wp.x_pixel
         y_cur = wp.y_pixel
-        is_ip = "IP" in wp.tags
-        is_tgt = "TGT" in wp.tags
         alpha = 150
         if is_focused:
             alpha = 255
-        colour = (0, 0, 0, alpha)
-        if "routeColour" in config:
-            hex_colour = config["routeColour"]
-            rgb_colour = ImageColor.getcolor(hex_colour, "RGB")
-            colour = (rgb_colour[0], rgb_colour[1], rgb_colour[2], alpha)
 
-        if is_ip or is_tgt:
+        hex_colour = Config.route_colour()
+        rgb_colour = ImageColor.getcolor(hex_colour, "RGB")
+        colour = (rgb_colour[0], rgb_colour[1], rgb_colour[2], alpha)
+
+        if wp.is_ip or wp.is_tgt:
             if wp.bearing_from_last is None:
                 raise Exception("IP and TgT must not be the first waypoint in a route")
 
-            if is_tgt:
+            if wp.is_tgt:
                 draw.regular_polygon(
                     (x_cur, y_cur, circle_radius),
                     3,
@@ -191,7 +197,7 @@ class Route:
                     outline= colour,
                     width=line_width
                 )
-            if is_ip:
+            if wp.is_ip:
                 draw.regular_polygon(
                     (x_cur, y_cur, circle_radius),
                     4,
@@ -238,10 +244,10 @@ class Route:
                 alpha = 255
 
             colour = (0, 0, 0, alpha)
-            if "routeColour" in config:
-                hex_colour = config["routeColour"]
-                rgb_colour = ImageColor.getcolor(hex_colour, "RGB")
-                colour = (rgb_colour[0], rgb_colour[1], rgb_colour[2], alpha)
+
+            hex_colour = Config.route_colour()
+            rgb_colour = ImageColor.getcolor(hex_colour, "RGB")
+            colour = (rgb_colour[0], rgb_colour[1], rgb_colour[2], alpha)
             angle = math.atan2(prev.y_pixel - wp.y_pixel, prev.x_pixel - wp.x_pixel)
 
             draw.line(
@@ -300,13 +306,13 @@ class Route:
                     #     font_size=50
                     # )
 
-    def crop_board_for_wp(self, index: int, img:  Image) -> Image:
+    def crop_board_for_wp(self, index: int, img:  'Image') -> 'Image':
         wp = self.waypoints[index]
         # (x, y) = self.map.get_pixels_for(wp.lat, wp.long)
         x = wp.x_pixel
         y = wp.y_pixel
         (board_width, board_height) = self.kneeboard_width_for_wp_index(index)
-        local_img = img
+
         if index > 0:
             prev = self.waypoints[index - 1]
             # (x_prev, y_prev) = self.map.get_pixels_for(prev.lat, prev.long)
@@ -333,9 +339,6 @@ class Route:
         ))
 
     def crop_overview_board(self, img: Image):
-        config = {}
-        with open('./config.json') as f:
-            config = json.load(f)
 
         x_max = 0
         x_min = img.width
@@ -362,7 +365,7 @@ class Route:
             min(x_max + x_margin, img.width),
             min(y_max + y_margin, img.height)
         ))
-        downsample_factor = float(config["overviewCardDownsampleFactor"])
+        downsample_factor = float(Config.overview_card_downsample_factor())
         cropped = cropped.resize(
             (round(cropped.width/downsample_factor), round(cropped.height/downsample_factor)),
             resample=PIL.Image.BILINEAR
@@ -519,12 +522,13 @@ class Route:
                 cropped_board = self.crop_board_for_wp(i, board)
                 annotated_board = self.add_doghouse_for_wp(i, cropped_board)
                 annotated_board = annotated_board.resize((1600, 2400), resample=PIL.Image.BILINEAR)
-                board_name = "./%s/%s-wp%s.jpg" % (self.name, self.map.name, i)
+
+                board_name = f"{output_root}/{self.name}/{self.map.name}-wp{i:02}.jpg"
                 annotated_board.save(board_name)
                 print("%s/%s  %s Board Complete" % (i, len(self.waypoints)-1, board_name))
 
         full_board = self.crop_overview_board(self.create_board_for_wp(len(self.waypoints) - 1, is_overview=True))
-        full_board.save("./%s/%s-Overview.jpg" % (self.name, self.map.name))
+        full_board.save(f"{output_root}/{self.name}/{self.map.name}-Overview.jpg")
 
     def debug_doghouse(self):
         for index, wp in enumerate(self.waypoints):

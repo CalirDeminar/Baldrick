@@ -9,8 +9,11 @@ from waypoint import to_degrees, to_lat_long, WayPoint
 from typing import Dict, Tuple, Set, List
 
 bundle_dir = path.abspath(path.dirname(__file__))
+is_prod = "_internal" in str(bundle_dir)
 
-
+data_dir = path.join(bundle_dir, '../data')
+if is_prod:
+    data_dir = path.join(bundle_dir, './data')
 
 class MapFile:
     # string
@@ -26,7 +29,7 @@ class MapFile:
 
     def __init__(self, dcs_map_name: str):
         self.name = dcs_map_name
-        self.filename = path.join(bundle_dir, "./data/%s/map.jpg" % dcs_map_name)
+        self.filename = path.join(data_dir, f"{dcs_map_name}/map.jpg")
         self.coordinate_map = import_pixel_map(dcs_map_name)
         self.altitude_map = import_altitude_map(dcs_map_name)
 
@@ -42,7 +45,7 @@ class MapFile:
         return angle
 
     def get_map_image(self):
-        filename = path.join(bundle_dir, "./data/%s/map.jpg" % self.name)
+        filename = path.join(data_dir, f"{self.name}/map.jpg")
         return Image.open(filename)
 
     def get_min_alt_between(self, wp1: 'WayPoint', wp2: 'WayPoint'):
@@ -162,7 +165,7 @@ class MapFile:
 
 def import_altitude_map(dcs_map_name: str):
     output: Dict[Tuple[Tuple[int, int, int], Tuple[int, int, int]], int] = {}
-    filename = path.join(bundle_dir, "./data/%s/altitudes.csv" % dcs_map_name)
+    filename = path.join(data_dir, f"{dcs_map_name}/altitudes.csv")
     if os.path.exists(filename):
         with open(filename, newline='') as csv_file:
             reader = csv.reader(csv_file, delimiter=',', quotechar='|')
@@ -179,7 +182,7 @@ def import_altitude_map(dcs_map_name: str):
 
 def import_pixel_map(dcs_map_name: str):
     output: Dict[Tuple[int, int], Tuple[int, int]] = {}
-    filename = path.join(bundle_dir, "./data/%s/map.csv" % dcs_map_name)
+    filename = path.join(data_dir, f"{dcs_map_name}/map.csv")
     with open(filename, newline='') as csv_file:
         reader = csv.reader(csv_file, delimiter=',', quotechar='|')
         for i, row in enumerate(reader):
@@ -202,7 +205,7 @@ def find_pixel_map_lat_long_bounds(dcs_map_name: str):
 def find_map_from_wp(lat: Tuple[int, int, int], long: Tuple[int, int, int]):
     (lat_d, _, _) = lat
     (long_d, _, _) = long
-    folder_name = path.join(bundle_dir, ".\\data")
+    folder_name = data_dir
     data_folders = list(filter(lambda i: i != "routes" and i != "legend.jpg", os.listdir(folder_name)))
     lat_long_bounds = list(map(lambda i: (i, find_pixel_map_lat_long_bounds(i)), data_folders))
     eligible_bounds = list(

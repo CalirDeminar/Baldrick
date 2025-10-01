@@ -3,6 +3,8 @@ import shutil
 import os
 
 if __name__ == '__main__':
+    if not os.path.exists('./dist/baldrick'):
+        os.mkdir('./dist/baldrick')
     if os.path.exists('./dist/baldrick'):
         shutil.rmtree('./dist/baldrick')
     if os.path.exists('./dist/baldrick.zip'):
@@ -11,4 +13,4 @@ if __name__ == '__main__':
     os.mkdir('./dist/baldrick/routes')
     shutil.copy('./routes/example.csv', './dist/baldrick/routes/example.csv')
     shutil.copy('./config.json', './dist/baldrick/config.json')
-    shutil.make_archive("./dist/baldrick", "zip", "./dist/baldrick")
+    shutil.make_archive("../dist/baldrick", "zip", "./dist/baldrick")

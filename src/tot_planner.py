@@ -3,15 +3,14 @@ import json
 
 from typing import List, Tuple, Union
 
-config = {}
-with open('./config.json') as f:
-    config = json.load(f)
+from src.config import Config
+
 
 # returns shape (Speed, hold_time_hrs) or None
 def find_speed_and_hold(distances: List[float], dash_speed: int, time_hrs: float, min_cruise_speed: int):
-    default_speed = config["defaultCruiseSpeed"]
+    default_speed = Config.default_cruise_speed()
     if min_cruise_speed is None:
-        min_cruise_speed = config["minCruiseSpeed"]
+        min_cruise_speed = Config.min_cruise_speed()
     if time_hrs is None:
         return default_speed, 0
     distances = list(map(lambda i:  0 if i is None else i, distances))
@@ -22,7 +21,7 @@ def find_speed_and_hold(distances: List[float], dash_speed: int, time_hrs: float
     dash_duration = (dash_distance/dash_speed)
     cruise_time = time_hrs-dash_duration
     speed_options: List[int] = [240, 300, 360, 420, 480, 540]
-    if 'metric' in config and config['metric'] is True:
+    if Config.metric():
         speed_options = [240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 1020]
     available_speeds = list(filter(lambda s: s >= min_cruise_speed, speed_options))
     speed_times = list(filter(

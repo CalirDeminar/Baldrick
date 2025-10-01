@@ -6,12 +6,11 @@ import unittest
 
 from typing import List, Tuple, Union
 
-config = {}
-with open('./config.json') as f:
-    config = json.load(f)
+from src.geometry_utils import bearing_from_dms
+from src.config import Config
 
 unit = Unit.NAUTICAL_MILES
-if 'metric' in config and config['metric'] is True:
+if Config.metric():
     unit = Unit.KILOMETERS
 
 class WayPoint:
@@ -64,23 +63,29 @@ class WayPoint:
             )
         )
 
-    def bearing_from(self, previous: 'WayPoint'):
-        own_lat = math.radians(self.lat[0] + (self.lat[1]/60) + (self.lat[2]/3600))
-        own_long = math.radians(self.long[0] + (self.long[1]/60) + (self.long[2]/3600))
+    def bearing_from(self, previous: 'WayPoint') -> int:
+        return bearing_from_dms((previous.lat, previous.long), (self.lat, self.long))
 
-        prev_lat = math.radians(previous.lat[0] + (previous.lat[1]/60) + (previous.lat[2]/3600))
-        prev_long = math.radians(previous.long[0] + (previous.long[1]/60) + (previous.long[2]/3600))
-
-        x = math.cos(own_lat) * math.sin(own_long-prev_long)
-        y = math.cos(prev_lat) * math.sin(own_lat) - math.sin(prev_lat) * math.cos(own_lat) * math.cos(own_long-prev_long)
-        output_rad = math.atan2(x, y)
-        return round((output_rad*180/math.pi + 360) % 360)
+    def bearing_to(self, to: 'WayPoint') -> int:
+        return bearing_from_dms( (self.lat, self.long), (to.lat, to.long))
 
     def to_degrees(self):
         return to_degrees(self.lat, self.long)
 
     def distance_from(self, wp: 'WayPoint'):
         return haversine.haversine(self.to_degrees(), wp.to_degrees(), unit=unit)
+
+    @property
+    def is_tgt(self):
+        return "TGT" in self.tags
+
+    @property
+    def is_ip(self):
+        return "IP" in self.tags
+
+    @property
+    def is_push(self):
+        return "PUSH" in self.tags
 
 
 def to_degrees(lat: Tuple[int, int, int], long: Tuple[int, int, int]):

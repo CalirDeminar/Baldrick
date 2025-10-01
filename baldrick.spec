@@ -2,8 +2,8 @@
 
 
 a = Analysis(
-    ['baldrick.py'],
-    pathex=[],
+    ['./src/baldrick.py'],
+    pathex=["./src"],
     binaries=[],
     datas=[('./data', 'data')],
     hiddenimports=[],
