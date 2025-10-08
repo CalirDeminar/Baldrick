@@ -142,6 +142,7 @@ class Route:
         push_wps = [x for x in self.waypoints if "PUSH" in x.tags]
         push_wp_index = push_wps[-1].index if len(push_wps) > 0 else 0
 
+        start_time = self.start_time
         timed_route = self.waypoints[push_wp_index:target_wp.index+1]
 
         distances = list(map(lambda wp: float(wp.distance_from_last), timed_route))
@@ -150,7 +151,7 @@ class Route:
         for i, t in enumerate(times):
             index = i + push_wp_index
             if index <= len(self.waypoints):
-                self.waypoints[index].time = t
+                self.waypoints[index].time = [start_time[0] + t[0], start_time[1] + t[1], start_time[2] + t[2]]
                 self.waypoints[index].speed = speed
                 if index == target_wp.index:
                     self.waypoints[index].speed = self.dash_speed

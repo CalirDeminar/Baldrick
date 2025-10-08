@@ -26,14 +26,15 @@ def main():
     if len(sys.argv) > 3:
         start_time = parse_time(sys.argv[2])
         time_on_target = parse_time(sys.argv[3])
-    if len(sys.argv) > 2:
+    elif len(sys.argv) > 2:
         time_on_target = parse_time(sys.argv[2])
     if not os.path.exists(route_file):
         raise Exception("%s route file not found at %s" % (route_name, route_file))
 
     route = Route(route_name, start_time, time_on_target)
-    if os.path.exists("../" + route_name):
-        shutil.rmtree("../" + route_name)
+    if os.path.exists(f"{routes_dir}/../{route_name}"):
+        shutil.rmtree(f"{routes_dir}/../{route_name}")
+
     os.mkdir(f"{routes_dir}/../{route_name}")
     notes_filename = path.join(f"{route_folder}/notes.txt")
     with open(notes_filename, "w") as f:

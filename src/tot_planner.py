@@ -28,6 +28,7 @@ def find_speed_and_hold(distances: List[float], dash_speed: int, time_hrs: float
         lambda t: t < cruise_time,
         list(map(lambda s: cruise_distance/s, available_speeds))
     ))
+
     best_time = speed_times[0]
     hold = time_hrs - best_time - dash_duration
     return math.floor(cruise_distance/best_time), hold
