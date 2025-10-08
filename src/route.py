@@ -151,7 +151,16 @@ class Route:
         for i, t in enumerate(times):
             index = i + push_wp_index
             if index <= len(self.waypoints):
-                self.waypoints[index].time = [start_time[0] + t[0], start_time[1] + t[1], start_time[2] + t[2]]
+                hours = (start_time[0] + t[0]) % 24
+                if (start_time[1] + t[1]) > 60:
+                    hours += 1
+                    hours = hours % 24
+                minutes = (start_time[1] + t[1]) % 60
+                if (start_time[2] + t[2]) > 60:
+                    minutes += 1
+                    minutes = minutes % 60
+                seconds = (start_time[2] + t[2]) % 60
+                self.waypoints[index].time = [hours, minutes, seconds]
                 self.waypoints[index].speed = speed
                 if index == target_wp.index:
                     self.waypoints[index].speed = self.dash_speed
