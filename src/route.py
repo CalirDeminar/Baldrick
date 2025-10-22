@@ -152,14 +152,16 @@ class Route:
             index = i + push_wp_index
             if index <= len(self.waypoints):
                 hours = (start_time[0] + t[0]) % 24
-                if (start_time[1] + t[1]) > 60:
+                minutes = (start_time[1] + t[1])
+                seconds = start_time[2] + t[2]
+                if minutes >= 60:
                     hours += 1
                     hours = hours % 24
-                minutes = (start_time[1] + t[1]) % 60
-                if (start_time[2] + t[2]) > 60:
+                    minutes = minutes % 60
+                if seconds >= 60:
                     minutes += 1
                     minutes = minutes % 60
-                seconds = (start_time[2] + t[2]) % 60
+                    seconds = seconds % 60
                 self.waypoints[index].time = [hours, minutes, seconds]
                 self.waypoints[index].speed = speed
                 if index == target_wp.index:
