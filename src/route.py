@@ -143,9 +143,9 @@ class Route:
         push_wp_index = push_wps[-1].index if len(push_wps) > 0 else 0
 
         start_time = self.start_time
-        timed_route = self.waypoints[push_wp_index:target_wp.index+1]
+        timed_route = self.waypoints[push_wp_index + 1:target_wp.index+1]
 
-        distances = list(map(lambda wp: float(wp.distance_from_last), timed_route))
+        distances = [0, *list(map(lambda wp: float(wp.distance_from_last), timed_route))]
         (times, speed) = get_waypoint_times(distances, self.start_time, self.time_on_target, self.dash_speed)
         self.cruise_speed = speed
         for i, t in enumerate(times):

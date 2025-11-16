@@ -20,18 +20,24 @@ def find_speed_and_hold(distances: List[float], dash_speed: int, time_hrs: float
 
     dash_duration = (dash_distance/dash_speed)
     cruise_time = time_hrs-dash_duration
+
     speed_options: List[int] = [240, 300, 360, 420, 480, 540]
     if Config.metric():
         speed_options = [240, 300, 360, 420, 480, 540, 600, 660, 720, 780, 840, 900, 960, 1020]
-    available_speeds = list(filter(lambda s: s >= min_cruise_speed, speed_options))
-    speed_times = list(filter(
-        lambda t: t < cruise_time,
-        list(map(lambda s: cruise_distance/s, available_speeds))
-    ))
+    available_speeds: list[int] = list(filter(lambda s: s >= min_cruise_speed, speed_options))
 
-    best_time = speed_times[0]
+    speed_times: list[tuple[float, int]] = list(filter(
+        lambda t: t[0] < cruise_time,
+        list(map(lambda s: (cruise_distance/s, s), available_speeds))
+    ))
+    if len(speed_times) == 0:
+        raise Exception("ToT Unachievable with given params")
+
+    best_time = speed_times[0][0]
+    best_speed = speed_times[0][1]
+
     hold = time_hrs - best_time - dash_duration
-    return math.floor(cruise_distance/best_time), hold
+    return best_speed, hold
 
 
 def get_waypoint_times(
