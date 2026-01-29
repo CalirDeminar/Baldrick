@@ -109,6 +109,9 @@ class MapFile:
     def get_pixels_for(self, lat: Tuple[int, int, int], long: Tuple[int, int, int]):
         (lat_d, lat_m, lat_s) = lat
         (long_d, long_m, long_s) = long
+        if (lat[0], long[0]) not in self.coordinate_map:
+            ((s, n), (e, w)) = self.bounds
+            raise ValueError(f'N{lat[0]} E{long[0]} is not within the bounds of {self.name} - N{(s, n)} E{(e, w)}')
 
         (start_x, start_y) = self.coordinate_map[(lat[0], long[0])]
         (lat_multipliers, long_multipliers) = self.get_translation_multipliers_for(lat, long)
@@ -161,6 +164,14 @@ class MapFile:
             math.floor((pixels_2_long[1] - pixels_1[1]) / delta_long),
         )
         return pixel_delta_per_lat_d, pixels_delta_per_long_d
+
+    def bounds(self):
+        n = max(list(self.coordinate_map.values())[0])
+        s = min(list(self.coordinate_map.values())[0])
+        w = max(list(self.coordinate_map.values())[0])
+        e = min(list(self.coordinate_map.values())[0])
+        return (s, w), (e, w)
+
 
 
 def import_altitude_map(dcs_map_name: str):

@@ -121,7 +121,7 @@ class Route:
             if wp.index > 0:
                 prev = self.waypoints[wp.index-1]
                 wp.bearing_from_last = wp.bearing_from(prev)
-                wp.distance_from_last = wp.distance_from(prev)
+                wp.distance_from_last = max(wp.distance_from(prev), 0.000001)
             if wp.index < len(self.waypoints)-1:
                 next_wp = self.waypoints[wp.index + 1]
                 wp.bearing_to_next = next_wp.bearing_from(wp)
@@ -394,12 +394,12 @@ class Route:
         heading = "N/A"
         if index > 0:
             prev = self.waypoints[index-1]
-            heading = f"{(wp.bearing_from(prev)-self.map.mag_var) % 360}°"
+            heading = f"{round((wp.bearing_from(prev)-self.map.mag_var) % 360):03d}°"
         next_heading = "N/A"
 
         if index < len(self.waypoints)-1:
             next_wp = self.waypoints[index+1]
-            next_heading = f"{(next_wp.bearing_from(wp)-self.map.mag_var) % 360}°"
+            next_heading = f"{round((next_wp.bearing_from(wp)-self.map.mag_var) % 360):03d}°"
 
         distance = "N/A"
         if wp.distance_from_last is not None:

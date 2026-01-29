@@ -73,7 +73,7 @@ class WayPoint:
         return to_degrees(self.lat, self.long)
 
     def distance_from(self, wp: 'WayPoint'):
-        return haversine.haversine(self.to_degrees(), wp.to_degrees(), unit=unit)
+        return max(haversine.haversine(self.to_degrees(), wp.to_degrees(), unit=unit), 0.000001)
 
     @property
     def is_tgt(self):
